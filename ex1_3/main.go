@@ -1,11 +1,16 @@
+/*Реализовать постоянную запись данных в канал (в главной горутине).
+
+Реализовать набор из N воркеров, которые читают данные из этого канала и
+выводят их в stdout.
+
+Программа должна принимать параметром количество воркеров и
+при старте создавать указанное число горутин-воркеров.*/
+
 package main
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
-	"os"
-	"os/signal"
 	"sync"
 	"time"
 )
@@ -16,27 +21,18 @@ func main() {
 	channel := make(chan int)
 	var wg sync.WaitGroup
 	wg.Add(N)
-	notifyContext, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-	
+
 	for range make([]struct{}, N) {
 		go Worker(&wg, channel)
 	}
-	Writer(notifyContext, channel)
+	Writer(channel)
 	wg.Wait()
 }
 
-func Writer(ctx context.Context, ch chan<- int) {
+func Writer(ch chan<- int) {
 	for {
-		select {
-		case <-ctx.Done():
-			close(ch)
-			fmt.Println("user did ctrl+c")
-			return
-		default:
-			data := rand.Intn(10000)
-			ch <- data
-		}
+		data := rand.Intn(100)
+		ch <- data
 	}
 }
 
